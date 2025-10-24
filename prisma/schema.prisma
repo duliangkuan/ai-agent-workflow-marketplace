@@ -1,0 +1,292 @@
+// This is your Prisma schema file for the AI Agent Workflow Marketplace
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String   @id @default(cuid())
+  sessionId  String   @unique
+  createdAt  DateTime @default(now())
+  
+  memberships     Membership[]
+  downloadRecords DownloadRecord[]
+  favorites       UserFavorite[]
+  
+  @@map("users")
+}
+
+model Account {
+  id                String   @id @default(cuid())
+  username          String   @unique
+  email             String   @unique
+  phone             String?  @unique
+  passwordHash      String
+  promotionCode     String   @unique @default(cuid())
+  totalEarnings     Float    @default(0)
+  availableBalance  Float    @default(0)
+  totalPromotions   Int      @default(0)
+  status            String   @default("active") // active, inactive, banned
+  emailVerified     Boolean  @default(false)
+  phoneVerified     Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  lastLoginAt       DateTime?
+  
+  // 推广关系
+  promotedBy        PromotionRelation[] @relation("Promoter")
+  promotedUsers     PromotionRelation[] @relation("PromotedUser")
+  commissionRecordsAsPromoter CommissionRecord[] @relation("CommissionPromoter")
+  commissionRecordsAsAccount  CommissionRecord[] @relation("CommissionAccount")
+  withdrawals       Withdrawal[]
+  settlements       Settlement[]
+  
+  // 会员和下载记录
+  accountMemberships     AccountMembership[]
+  accountDownloadRecords AccountDownloadRecord[]
+  accountFavorites       AccountFavorite[]
+  
+  // 会话管理
+  sessions               Session[]
+  
+  @@map("accounts")
+}
+
+model Membership {
+  id                  String   @id @default(cuid())
+  userId              String
+  type                String   // temporary, regular, premium, super
+  startTime           DateTime
+  endTime             DateTime
+  status              String   @default("active") // active, expired
+  remainingDownloads  Int      @default(0)
+  createdAt           DateTime @default(now())
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("memberships")
+}
+
+model Product {
+  id              String   @id @default(cuid())
+  title           String
+  description     String
+  type            String   // agent, workflow
+  videoUrl        String?
+  sourceUrl       String?
+  guideUrl        String?
+  purchaseCount   Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  downloadRecords DownloadRecord[]
+  favorites       UserFavorite[]
+  accountDownloadRecords AccountDownloadRecord[]
+  accountFavorites       AccountFavorite[]
+  
+  @@map("products")
+}
+
+model ActivationCode {
+  id          String    @id @default(cuid())
+  code        String    @unique
+  type        String    // temporary, regular, premium, super
+  isActivated Boolean   @default(false)
+  activatedAt DateTime?
+  userId      String?
+  expiresAt   DateTime
+  usageCount  Int       @default(0)
+  createdAt   DateTime  @default(now())
+  
+  logs ActivationLog[]
+  
+  @@map("activation_codes")
+}
+
+model CustomOrder {
+  id          String   @id @default(cuid())
+  name        String
+  phone       String
+  demand      String
+  budget      String
+  deadline    String
+  submittedAt DateTime @default(now())
+  
+  @@map("custom_orders")
+}
+
+model Admin {
+  id           String   @id @default(cuid())
+  passwordHash String
+  isInitial    Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  @@map("admin")
+}
+
+model DownloadRecord {
+  id          String   @id @default(cuid())
+  userId      String
+  productId   String
+  downloadedAt DateTime @default(now())
+  
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@map("download_records")
+}
+
+model UserFavorite {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+  
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, productId])
+  @@map("user_favorites")
+}
+
+model ActivationLog {
+  id        String   @id @default(cuid())
+  code      String
+  action    String   // generated, activated, expired
+  timestamp DateTime @default(now())
+  details   String?
+  
+  activationCode ActivationCode @relation(fields: [code], references: [code], onDelete: Cascade)
+  
+  @@map("activation_logs")
+}
+
+model PromotionRelation {
+  id                    String   @id @default(cuid())
+  promoterId            String
+  accountId             String
+  promotionCode         String
+  firstPurchaseAt       DateTime?
+  totalPurchaseAmount   Float    @default(0)
+  totalCommission       Float    @default(0)
+  createdAt             DateTime @default(now())
+  
+  promoter Account @relation("Promoter", fields: [promoterId], references: [id], onDelete: Cascade)
+  account  Account @relation("PromotedUser", fields: [accountId], references: [id], onDelete: Cascade)
+  
+  @@unique([promoterId, accountId])
+  @@map("promotion_relations")
+}
+
+model CommissionRecord {
+  id              String   @id @default(cuid())
+  promoterId      String
+  accountId       String
+  membershipId    String?
+  activationCodeId String?
+  amount          Float
+  rate            Float
+  membershipType  String
+  membershipPrice Float
+  status          String   @default("pending") // pending, confirmed, paid
+  createdAt       DateTime @default(now())
+  confirmedAt     DateTime?
+  paidAt          DateTime?
+  
+  promoter Account @relation("CommissionPromoter", fields: [promoterId], references: [id], onDelete: Cascade)
+  account  Account @relation("CommissionAccount", fields: [accountId], references: [id], onDelete: Cascade)
+  
+  @@map("commission_records")
+}
+
+model Withdrawal {
+  id            String   @id @default(cuid())
+  promoterId    String
+  amount        Float
+  paymentMethod String   // wechat, alipay
+  paymentCode   String   // 收款码URL
+  status        String   @default("pending") // pending, processing, completed, rejected
+  remark        String?
+  createdAt     DateTime @default(now())
+  processedAt   DateTime?
+  completedAt   DateTime?
+  
+  promoter Account @relation(fields: [promoterId], references: [id], onDelete: Cascade)
+  
+  @@map("withdrawals")
+}
+
+model Settlement {
+  id                String   @id @default(cuid())
+  promoterId        String
+  period            String   // 2024-01-15, 2024-01-30
+  totalAmount       Float
+  commissionRecords String   // JSON array of commission record IDs
+  status            String   @default("pending") // pending, processing, completed
+  createdAt         DateTime @default(now())
+  processedAt       DateTime?
+  
+  promoter Account @relation(fields: [promoterId], references: [id], onDelete: Cascade)
+  
+  @@map("settlements")
+}
+
+model AccountMembership {
+  id                  String   @id @default(cuid())
+  accountId           String
+  type                String   // temporary, regular, premium, super
+  startTime           DateTime
+  endTime             DateTime
+  status              String   @default("active") // active, expired
+  remainingDownloads  Int      @default(0)
+  createdAt           DateTime @default(now())
+  
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  
+  @@map("account_memberships")
+}
+
+model AccountDownloadRecord {
+  id          String   @id @default(cuid())
+  accountId   String
+  productId   String
+  downloadedAt DateTime @default(now())
+  
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@map("account_download_records")
+}
+
+model AccountFavorite {
+  id        String   @id @default(cuid())
+  accountId String
+  productId String
+  createdAt DateTime @default(now())
+  
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@unique([accountId, productId])
+  @@map("account_favorites")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  accountId String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  
+  @@map("sessions")
+}
