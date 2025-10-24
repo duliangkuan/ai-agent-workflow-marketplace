@@ -175,8 +175,8 @@ export async function POST(request: NextRequest) {
       membership: {
         type: activationCode.type,
         name: membershipInfo.name,
-        endTime: result.endTime,
-        remainingDownloads: result.remainingDownloads
+        endTime: result?.endTime,
+        remainingDownloads: result?.remainingDownloads
       }
     })
   } catch (error) {
