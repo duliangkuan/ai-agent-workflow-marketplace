@@ -66,6 +66,13 @@ export async function POST(request: NextRequest) {
     // 检查用户会员状态（支持两种系统）
     let membership = null
     let userId = accountId || sessionUserId
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: '用户ID不能为空' },
+        { status: 400 }
+      )
+    }
     
     if (accountId) {
       // 账号系统
