@@ -174,7 +174,7 @@ export async function POST(request: NextRequest) {
       guideUrl: product.guideUrl,
       message: '获取下载链接成功'
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('下载产品失败:', error)
     console.error('错误详情:', {
       message: error.message,
