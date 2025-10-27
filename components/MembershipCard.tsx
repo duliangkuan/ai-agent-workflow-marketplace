@@ -115,7 +115,10 @@ export default function MembershipCard({ type, name, price, duration, downloads,
                         className="max-w-full max-h-full object-contain"
                         onError={(e) => {
                           e.currentTarget.style.display = 'none'
-                          e.currentTarget.nextElementSibling.style.display = 'flex'
+                          const nextElement = e.currentTarget.nextElementSibling as HTMLElement
+                          if (nextElement) {
+                            nextElement.style.display = 'flex'
+                          }
                         }}
                       />
                       <div className="text-gray-400 text-sm hidden flex-col items-center justify-center">
@@ -137,7 +140,10 @@ export default function MembershipCard({ type, name, price, duration, downloads,
                         className="max-w-full max-h-full object-contain"
                         onError={(e) => {
                           e.currentTarget.style.display = 'none'
-                          e.currentTarget.nextElementSibling.style.display = 'flex'
+                          const nextElement = e.currentTarget.nextElementSibling as HTMLElement
+                          if (nextElement) {
+                            nextElement.style.display = 'flex'
+                          }
                         }}
                       />
                       <div className="text-gray-400 text-sm hidden flex-col items-center justify-center">
