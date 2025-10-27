@@ -18,14 +18,32 @@ export async function POST(request: NextRequest) {
     }
 
     // 优先使用账号系统，回退到会话系统
-    const accountSessionId = await getAccountSessionId()
+    const accountSessionToken = await getAccountSessionId()
     const sessionUserId = await getUserId()
     
-    if (!accountSessionId && !sessionUserId) {
+    if (!accountSessionToken && !sessionUserId) {
       return NextResponse.json(
-        { error: '用户会话无效' },
+        { error: '请先登录后再激活会员码' },
         { status: 401 }
       )
+    }
+
+    // 获取实际的账户ID
+    let accountId = null
+    if (accountSessionToken) {
+      const session = await prisma.session.findUnique({
+        where: { token: accountSessionToken },
+        include: { account: true }
+      })
+      
+      if (!session || session.expiresAt < new Date()) {
+        return NextResponse.json(
+          { error: '用户会话已过期，请重新登录' },
+          { status: 401 }
+        )
+      }
+      
+      accountId = session.accountId
     }
 
     // 查找激活码
@@ -59,11 +77,11 @@ export async function POST(request: NextRequest) {
     // 检查用户是否已有同类型会员（支持两种系统）
     let existingMembership = null
     
-    if (accountSessionId) {
+    if (accountId) {
       // 账号系统
       existingMembership = await prisma.accountMembership.findFirst({
         where: {
-          accountId: accountSessionId,
+          accountId: accountId,
           type: activationCode.type,
           status: 'active',
           endTime: { gt: new Date() }
@@ -101,11 +119,11 @@ export async function POST(request: NextRequest) {
     const result = await prisma.$transaction(async (tx) => {
       let membership = null
       
-      if (accountSessionId) {
+      if (accountId) {
         // 账号系统 - 创建账号会员记录
         membership = await tx.accountMembership.create({
           data: {
-            accountId: accountSessionId,
+            accountId: accountId,
             type: activationCode.type,
             startTime,
             endTime,
@@ -133,7 +151,7 @@ export async function POST(request: NextRequest) {
         data: {
           isActivated: true,
           activatedAt: new Date(),
-          userId: accountSessionId || sessionUserId,
+          userId: accountId || sessionUserId,
           usageCount: { increment: 1 }
         }
       })
@@ -143,7 +161,7 @@ export async function POST(request: NextRequest) {
         data: {
           code: activationCode.code,
           action: 'activated',
-          details: `用户 ${accountSessionId || sessionUserId} 激活了 ${membershipInfo.name}`
+          details: `用户 ${accountId || sessionUserId} 激活了 ${membershipInfo.name}`
         }
       })
 
@@ -151,17 +169,17 @@ export async function POST(request: NextRequest) {
     })
 
     // 处理分润计算（仅对账号系统用户）
-    if (accountSessionId) {
+    if (accountId) {
       // 查找推广关系
       const promotionRelation = await prisma.promotionRelation.findFirst({
-        where: { accountId: accountSessionId }
+        where: { accountId: accountId }
       })
 
       if (promotionRelation) {
         // 计算分润
         await processCommission(
           promotionRelation.promoterId,
-          accountSessionId,
+          accountId,
           activationCode.type,
           result?.id,
           activationCode.id
@@ -181,8 +199,13 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('激活会员码失败:', error)
+    console.error('错误详情:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    })
     return NextResponse.json(
-      { error: '激活失败，请稍后重试' },
+      { error: '激活失败，请稍后重试', details: error.message },
       { status: 500 }
     )
   }

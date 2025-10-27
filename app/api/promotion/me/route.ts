@@ -5,13 +5,28 @@ import { getNextSettlementDate, formatSettlementDate } from '@/lib/commission'
 
 export async function GET(request: NextRequest) {
   try {
-    const accountId = await getAccountSessionId()
-    if (!accountId) {
+    const sessionToken = await getAccountSessionId()
+    if (!sessionToken) {
       return NextResponse.json(
         { error: '请先登录' },
         { status: 401 }
       )
     }
+
+    // 通过session token查找有效的会话
+    const session = await prisma.session.findUnique({
+      where: { token: sessionToken },
+      include: { account: true }
+    })
+
+    if (!session || session.expiresAt < new Date()) {
+      return NextResponse.json(
+        { error: '会话已过期' },
+        { status: 401 }
+      )
+    }
+
+    const accountId = session.accountId
 
     // 获取推广员信息
     const account = await prisma.account.findUnique({

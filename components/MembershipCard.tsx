@@ -14,6 +14,7 @@ interface MembershipCardProps {
 
 export default function MembershipCard({ type, name, price, duration, downloads, features, isRecommended }: MembershipCardProps) {
   const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [paymentTab, setPaymentTab] = useState<'wechat' | 'alipay'>('wechat') // 默认显示微信支付
 
   const handleSubscribe = () => {
     setShowPaymentModal(true)
@@ -67,7 +68,7 @@ export default function MembershipCard({ type, name, price, duration, downloads,
       {/* 支付弹窗 */}
       {showPaymentModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
+          <div className="bg-white rounded-lg p-6 w-[480px] max-w-[90vw] mx-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">
               支付 {name}
             </h3>
@@ -77,20 +78,76 @@ export default function MembershipCard({ type, name, price, duration, downloads,
               <p className="text-gray-600">有效期：{duration}</p>
             </div>
 
-            <div className="space-y-4 mb-6">
-              <div className="text-center">
-                <p className="text-sm font-medium text-gray-700 mb-2">微信支付</p>
-                <div className="bg-gray-100 rounded-lg p-4 h-32 flex items-center justify-center">
-                  <div className="text-gray-400 text-sm">微信收款码</div>
+            {/* 支付方式标签页 */}
+            <div className="flex mb-6 bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setPaymentTab('wechat')}
+                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                  paymentTab === 'wechat'
+                    ? 'bg-white text-green-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                微信支付
+              </button>
+              <button
+                onClick={() => setPaymentTab('alipay')}
+                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                  paymentTab === 'alipay'
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                支付宝支付
+              </button>
+            </div>
+
+            {/* 收款码显示区域 */}
+            <div className="mb-6">
+              {paymentTab === 'wechat' ? (
+                <div className="text-center">
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-4">
+                    <p className="text-green-700 text-sm font-medium mb-3">推荐使用微信支付</p>
+                    <div className="bg-white rounded-lg p-4 h-64 flex items-center justify-center">
+                      <img 
+                        src="/images/wechat-qr.png" 
+                        alt="微信收款码" 
+                        className="max-w-full max-h-full object-contain"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none'
+                          e.currentTarget.nextElementSibling.style.display = 'flex'
+                        }}
+                      />
+                      <div className="text-gray-400 text-sm hidden flex-col items-center justify-center">
+                        <div className="text-4xl mb-2">📱</div>
+                        <div>微信收款码</div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              
-              <div className="text-center">
-                <p className="text-sm font-medium text-gray-700 mb-2">支付宝支付</p>
-                <div className="bg-gray-100 rounded-lg p-4 h-32 flex items-center justify-center">
-                  <div className="text-gray-400 text-sm">支付宝收款码</div>
+              ) : (
+                <div className="text-center">
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-4">
+                    <p className="text-blue-700 text-sm font-medium mb-3">推荐使用支付宝</p>
+                    <p className="text-blue-600 text-xs mb-3">支持信用卡|花呗付款</p>
+                    <div className="bg-white rounded-lg p-4 h-64 flex items-center justify-center">
+                      <img 
+                        src="/images/alipay-qr.png" 
+                        alt="支付宝收款码" 
+                        className="max-w-full max-h-full object-contain"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none'
+                          e.currentTarget.nextElementSibling.style.display = 'flex'
+                        }}
+                      />
+                      <div className="text-gray-400 text-sm hidden flex-col items-center justify-center">
+                        <div className="text-4xl mb-2">💳</div>
+                        <div>支付宝收款码</div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">

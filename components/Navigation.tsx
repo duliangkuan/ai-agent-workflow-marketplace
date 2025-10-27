@@ -50,7 +50,7 @@ export default function Navigation({ activeTab, onTabChange }: NavigationProps) 
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-8">
               <h1 className="text-xl font-bold text-gray-900">
-                智能体与工作流售卖平台
+                Workflow智能工坊
               </h1>
               <div className="flex space-x-6">
                 <button

@@ -1,12 +1,12 @@
 import nodemailer from 'nodemailer'
 
 const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST,
-  port: parseInt(process.env.EMAIL_PORT || '587'),
-  secure: false,
+  host: 'smtp.qq.com',
+  port: 587,
+  secure: false, // 587端口使用TLS
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    user: '2330304961@qq.com',
+    pass: 'xrzimvjwqqxmebig', // QQ邮箱授权码
   },
 })
 
@@ -18,8 +18,8 @@ export async function sendCustomOrderEmail(orderData: {
   deadline: string
 }) {
   const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: process.env.EMAIL_TO,
+    from: '2330304961@qq.com',
+    to: '2330304961@qq.com',
     subject: '新的定制需求提交',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">

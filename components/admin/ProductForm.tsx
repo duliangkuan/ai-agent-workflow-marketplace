@@ -30,11 +30,6 @@ export default function ProductForm({ product, onSuccess, onCancel }: ProductFor
     guideUrl: ''
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [uploadingFiles, setUploadingFiles] = useState({
-    video: false,
-    source: false,
-    guide: false
-  })
 
   useEffect(() => {
     if (product) {
@@ -57,34 +52,12 @@ export default function ProductForm({ product, onSuccess, onCancel }: ProductFor
     }))
   }
 
-  const handleFileUpload = async (file: File, type: 'video' | 'source' | 'guide') => {
-    setUploadingFiles(prev => ({ ...prev, [type]: true }))
-
+  const validateUrl = (url: string): boolean => {
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('type', type)
-
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData
-      })
-
-      const data = await response.json()
-      if (data.success) {
-        setFormData(prev => ({
-          ...prev,
-          [`${type}Url`]: data.url
-        }))
-        alert('文件上传成功')
-      } else {
-        alert(data.error || '文件上传失败')
-      }
-    } catch (error) {
-      console.error('文件上传失败:', error)
-      alert('文件上传失败，请稍后重试')
-    } finally {
-      setUploadingFiles(prev => ({ ...prev, [type]: false }))
+      new URL(url)
+      return true
+    } catch {
+      return false
     }
   }
 
@@ -178,82 +151,70 @@ export default function ProductForm({ product, onSuccess, onCancel }: ProductFor
             />
           </div>
 
-          {/* 文件上传 */}
+          {/* 资源链接 */}
           <div className="space-y-4">
-            <h3 className="text-lg font-medium text-gray-900">文件资源</h3>
+            <h3 className="text-lg font-medium text-gray-900">资源链接</h3>
 
-            {/* 效果展示视频 */}
+            {/* 效果展示视频链接 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                效果展示视频
+                效果展示视频链接
               </label>
-              <div className="flex items-center space-x-4">
-                <input
-                  type="file"
-                  accept="video/mp4,video/webm,video/ogg"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0]
-                    if (file) handleFileUpload(file, 'video')
-                  }}
-                  disabled={uploadingFiles.video}
-                  className="flex-1"
-                />
-                {uploadingFiles.video && (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></div>
-                )}
-              </div>
-              {formData.videoUrl && (
-                <p className="text-sm text-green-600 mt-1">✓ 视频已上传</p>
+              <input
+                type="url"
+                name="videoUrl"
+                value={formData.videoUrl}
+                onChange={handleInputChange}
+                className="input"
+                placeholder="请输入视频链接 (如: https://example.com/video.mp4)"
+              />
+              {formData.videoUrl && !validateUrl(formData.videoUrl) && (
+                <p className="text-sm text-red-600 mt-1">请输入有效的URL链接</p>
+              )}
+              {formData.videoUrl && validateUrl(formData.videoUrl) && (
+                <p className="text-sm text-green-600 mt-1">✓ 视频链接已设置</p>
               )}
             </div>
 
-            {/* 源文件压缩包 */}
+            {/* 源文件压缩包链接 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                源文件压缩包
+                源文件压缩包链接
               </label>
-              <div className="flex items-center space-x-4">
-                <input
-                  type="file"
-                  accept=".zip,.rar,.7z"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0]
-                    if (file) handleFileUpload(file, 'source')
-                  }}
-                  disabled={uploadingFiles.source}
-                  className="flex-1"
-                />
-                {uploadingFiles.source && (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></div>
-                )}
-              </div>
-              {formData.sourceUrl && (
-                <p className="text-sm text-green-600 mt-1">✓ 源文件已上传</p>
+              <input
+                type="url"
+                name="sourceUrl"
+                value={formData.sourceUrl}
+                onChange={handleInputChange}
+                className="input"
+                placeholder="请输入压缩包下载链接 (如: https://example.com/files.zip)"
+              />
+              {formData.sourceUrl && !validateUrl(formData.sourceUrl) && (
+                <p className="text-sm text-red-600 mt-1">请输入有效的URL链接</p>
+              )}
+              {formData.sourceUrl && validateUrl(formData.sourceUrl) && (
+                <p className="text-sm text-green-600 mt-1">✓ 源文件链接已设置</p>
               )}
             </div>
 
-            {/* 使用说明文件 */}
+            {/* 使用说明文件链接 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                使用说明文件
+                使用说明文件链接
               </label>
-              <div className="flex items-center space-x-4">
-                <input
-                  type="file"
-                  accept="video/mp4,application/pdf,.txt"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0]
-                    if (file) handleFileUpload(file, 'guide')
-                  }}
-                  disabled={uploadingFiles.guide}
-                  className="flex-1"
-                />
-                {uploadingFiles.guide && (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></div>
-                )}
-              </div>
-              {formData.guideUrl && (
-                <p className="text-sm text-green-600 mt-1">✓ 说明文件已上传</p>
+              <input
+                type="url"
+                name="guideUrl"
+                value={formData.guideUrl}
+                onChange={handleInputChange}
+                className="input"
+                placeholder="请输入说明文件链接 (如: https://example.com/guide.pdf)"
+              />
+              {formData.guideUrl && !validateUrl(formData.guideUrl) && (
+                <p className="text-sm text-red-600 mt-1">请输入有效的URL链接</p>
+              )}
+              {formData.guideUrl && validateUrl(formData.guideUrl) && (
+                <p className="text-sm text-green-600 mt-1">✓ 说明文件链接已设置</p>
               )}
             </div>
           </div>

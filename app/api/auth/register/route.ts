@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { hashPassword, generatePromotionCode, validateEmail, validateUsername, validatePassword } from '@/lib/account-auth'
+import { hashPassword, generatePromotionCode, validateEmail, validateUsername, validatePassword, createAccountSession } from '@/lib/account-auth'
 
 export async function POST(request: NextRequest) {
   try {
@@ -107,6 +107,9 @@ export async function POST(request: NextRequest) {
       return account
     })
 
+    // 注册成功后自动创建用户会话（自动登录）
+    const sessionToken = await createAccountSession(result.id)
+
     return NextResponse.json({
       success: true,
       message: '注册成功！',
@@ -115,7 +118,8 @@ export async function POST(request: NextRequest) {
         username: result.username,
         email: result.email,
         promotionCode: result.promotionCode
-      }
+      },
+      sessionToken: sessionToken
     })
   } catch (error) {
     console.error('用户注册失败:', error)

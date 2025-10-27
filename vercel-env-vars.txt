@@ -1,12 +1,12 @@
+# Production Environment Variables for Vercel Deployment
+# Copy these variables to Vercel Dashboard > Project Settings > Environment Variables
+
 # Database
 DATABASE_URL="postgresql://neondb_owner:npg_OYXm59pSojGH@ep-twilight-sunset-a1zupgwh-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require"
 
-# Vercel Blob Storage
-BLOB_READ_WRITE_TOKEN="your_vercel_blob_token"
-
 # Email Configuration
 EMAIL_HOST="smtp.qq.com"
-EMAIL_PORT=587
+EMAIL_PORT="587"
 EMAIL_USER="2330304961@qq.com"
 EMAIL_PASS="your_email_password"
 EMAIL_TO="2330304961@qq.com"
@@ -16,5 +16,5 @@ ADMIN_INITIAL_PASSWORD="admin888888"
 ADMIN_ID_CARD="13062120060302271X"
 
 # App Configuration
-NEXTAUTH_SECRET="your_nextauth_secret"
-NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="your_nextauth_secret_production"
+NEXTAUTH_URL="https://your-domain.vercel.app"

@@ -22,9 +22,11 @@ interface Product {
 
 interface ProductCardProps {
   product: Product
+  onCardClick: (product: Product) => void
+  onDownload: (product: Product) => void
 }
 
-export default function ProductCard({ product }: ProductCardProps) {
+export default function ProductCard({ product, onCardClick, onDownload }: ProductCardProps) {
   const [isVideoPlaying, setIsVideoPlaying] = useState(false)
   const [isFavorited, setIsFavorited] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -76,14 +78,18 @@ export default function ProductCard({ product }: ProductCardProps) {
     }
   }
 
-  const handlePurchase = () => {
+  const handleDownload = (e: React.MouseEvent) => {
+    e.stopPropagation() // 阻止事件冒泡
     if (isLoggedIn) {
-      // 已登录用户跳转到个人中心的会员订阅板块
-      router.push('/?tab=personal')
+      onDownload(product)
     } else {
       // 未登录用户显示注册弹窗
       setShowRegisterModal(true)
     }
+  }
+
+  const handleCardClick = () => {
+    onCardClick(product)
   }
 
   const handleRegisterSuccess = () => {
@@ -94,7 +100,10 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   return (
     <>
-      <div className="card hover:shadow-md transition-shadow duration-200">
+      <div 
+        className="card hover:shadow-md transition-shadow duration-200 cursor-pointer"
+        onClick={handleCardClick}
+      >
       {/* 视频预览区域 */}
       <div className="relative mb-4">
         {product.videoUrl ? (
@@ -185,12 +194,12 @@ export default function ProductCard({ product }: ProductCardProps) {
           </div>
         </div>
 
-        {/* 购买按钮 */}
+        {/* 下载按钮 */}
         <button
-          onClick={handlePurchase}
+          onClick={handleDownload}
           className="w-full btn-primary"
         >
-          购买
+          下载
         </button>
       </div>
     </div>

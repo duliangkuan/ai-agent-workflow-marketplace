@@ -15,9 +15,8 @@ model User {
   sessionId  String   @unique
   createdAt  DateTime @default(now())
   
-  memberships     Membership[]
-  downloadRecords DownloadRecord[]
-  favorites       UserFavorite[]
+  memberships Membership[]
+  favorites   UserFavorite[]
   
   @@map("users")
 }
@@ -137,7 +136,6 @@ model DownloadRecord {
   productId   String
   downloadedAt DateTime @default(now())
   
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   
   @@map("download_records")

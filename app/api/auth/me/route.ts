@@ -4,28 +4,41 @@ import { getAccountSessionId } from '@/lib/account-auth'
 
 export async function GET(request: NextRequest) {
   try {
-    const sessionId = await getAccountSessionId()
-    if (!sessionId) {
+    const sessionToken = await getAccountSessionId()
+    if (!sessionToken) {
       return NextResponse.json(
         { error: '未登录' },
         { status: 401 }
       )
     }
 
-    // 查找用户账号
-    const account = await prisma.account.findUnique({
-      where: { id: sessionId },
-      include: {
-        accountMemberships: {
-          where: {
-            status: 'active',
-            endTime: { gt: new Date() }
-          },
-          orderBy: { createdAt: 'desc' },
-          take: 1
+    // 通过session token查找有效的会话
+    const session = await prisma.session.findUnique({
+      where: { token: sessionToken },
+      include: { 
+        account: {
+          include: {
+            accountMemberships: {
+              where: {
+                status: 'active',
+                endTime: { gt: new Date() }
+              },
+              orderBy: { createdAt: 'desc' },
+              take: 1
+            }
+          }
         }
       }
     })
+
+    if (!session || session.expiresAt < new Date()) {
+      return NextResponse.json(
+        { error: '会话已过期' },
+        { status: 401 }
+      )
+    }
+
+    const account = session.account
 
     if (!account) {
       return NextResponse.json(
