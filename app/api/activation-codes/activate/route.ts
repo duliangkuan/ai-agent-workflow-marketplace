@@ -197,7 +197,7 @@ export async function POST(request: NextRequest) {
         remainingDownloads: result?.remainingDownloads
       }
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('激活会员码失败:', error)
     console.error('错误详情:', {
       message: error.message,
