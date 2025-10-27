@@ -65,7 +65,7 @@ ADMIN_ID_CARD="13062120060302271X"
 
 # 应用配置
 NEXTAUTH_SECRET="your_nextauth_secret"
-NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_URL="https://fengyunworkflow.top"
 ```
 
 ### 4. 数据库初始化

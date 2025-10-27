@@ -57,7 +57,7 @@ ADMIN_ID_CARD="13062120060302271X"
 
 # 应用配置
 NEXTAUTH_SECRET="your_random_secret_key"
-NEXTAUTH_URL="https://your-domain.vercel.app"
+NEXTAUTH_URL="https://fengyunworkflow.top"
 ```
 
 ### 3. 数据库初始化
